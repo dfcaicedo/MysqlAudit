@@ -55,10 +55,10 @@ Public Class Form1
             sql &= "drop trigger if exists eliminarduplicados_trg //" & vbCrLf
             sql &= "ALTER TABLE `au_dtran`" & vbCrLf
             sql &= "ADD INDEX `transacion` (`tra_cont` ASC);" & vbCrLf
-            sql &= "ALTER TABLE `spadb`.`au_dtran` " & vbCrLf
+            sql &= "ALTER TABLE `au_dtran` " & vbCrLf
             sql &= "ADD CONSTRAINT `transacion_fk`" & vbCrLf
             sql &= "FOREIGN KEY (`tra_cont`)" & vbCrLf
-            sql &= "REFERENCES `spadb`.`au_trans` (`tra_cont`)" & vbCrLf
+            sql &= "REFERENCES `au_trans` (`tra_cont`)" & vbCrLf
             sql &= "ON DELETE cascade" & vbCrLf
             sql &= "ON UPDATE NO ACTION;" & vbCrLf
 
