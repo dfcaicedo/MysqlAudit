@@ -70,8 +70,9 @@ Public Class Form1
                 If tabla <> "au_trans" And tabla <> "au_dtran" Then
                     cnt2.Open()
                     cmdc = New MySqlCommand("desc " & tabla, cnt2)
-                    Dim campos() As String
+                    Dim campos() As Fields
                     campos = Nothing
+
                     lcampos = cmdc.ExecuteReader
                     While lcampos.Read
                         If campos Is Nothing Then
@@ -79,7 +80,13 @@ Public Class Form1
                         Else
                             ReDim Preserve campos(campos.Length)
                         End If
-                        campos(campos.Length - 1) = lcampos.GetValue(0)
+                        campos(campos.Length - 1) = New Fields
+                        campos(campos.Length - 1).name = lcampos.GetValue(0)
+                        campos(campos.Length - 1).key = False
+
+                        If lcampos.GetString(3).Trim = "PRI" Or lcampos.GetString(3).Trim = "UNI" Then
+                            campos(campos.Length - 1).key = True
+                        End If
                     End While
                     lcampos.Close()
                     cnt2.Close()
@@ -89,7 +96,7 @@ Public Class Form1
                     sql &= "    begin" & vbCrLf
                     sql &= "        insert into au_trans values(null,'" & tabla & "','INSERT',USER(),now());" & vbCrLf
                     For p = 0 To campos.Length - 1
-                        sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p) & "',new." & campos(p) & ",'');" & vbCrLf
+                        sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "',new." & campos(p).name & ",'');" & vbCrLf
                     Next
                     sql &= " end " & vbCrLf
                     sql &= "//" & vbCrLf
@@ -99,9 +106,14 @@ Public Class Form1
                     sql &= "    begin" & vbCrLf
                     sql &= "        insert into au_trans values(null,'" & tabla & "','UPDATE',USER(),now());" & vbCrLf
                     For p = 0 To campos.Length - 1
-                        sql &= " if New." & campos(p) & " <> Old." & campos(p) & " then" & vbNewLine
-                        sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p) & "',new." & campos(p) & ",old." & campos(p) & ");" & vbCrLf
-                        sql &= "end if;" & vbNewLine
+                        If Not campos(p).key Then
+                            sql &= " if New." & campos(p).name & " <> Old." & campos(p).name & " then" & vbNewLine
+                            sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "',new." & campos(p).name & ",old." & campos(p).name & ");" & vbCrLf
+                            sql &= "end if;" & vbNewLine
+                        Else
+                            sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "',new." & campos(p).name & ",old." & campos(p).name & ");" & vbCrLf
+                        End If
+
                     Next
                     sql &= " end " & vbCrLf
                     sql &= "//" & vbCrLf
@@ -111,7 +123,7 @@ Public Class Form1
                     sql &= "    begin" & vbCrLf
                     sql &= "        insert into au_trans values(null,'" & tabla & "','DELETE',USER(),now());" & vbCrLf
                     For p = 0 To campos.Length - 1
-                        sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p) & "','',old." & campos(p) & ");" & vbCrLf
+                        sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "','',old." & campos(p).name & ");" & vbCrLf
                     Next
                     sql &= " end " & vbCrLf
                     sql &= "//" & vbCrLf
