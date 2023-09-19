@@ -69,7 +69,7 @@ Public Class Form1
                 tabla = ltablas.GetValue(0)
                 If tabla <> "au_trans" And tabla <> "au_dtran" Then
                     cnt2.Open()
-                    cmdc = New MySqlCommand("desc " & tabla, cnt2)
+                    cmdc = New MySqlCommand("desc `" & tabla & "`", cnt2)
                     Dim campos() As Fields
                     campos = Nothing
 
@@ -90,13 +90,13 @@ Public Class Form1
                     End While
                     lcampos.Close()
                     cnt2.Close()
-                    sql &= "drop trigger if exists " & tabla & "_insert_audit //" & vbCrLf
-                    sql &= " create trigger " & tabla & "_insert_audit after insert on " & tabla & vbCrLf
+                    sql &= "drop trigger if exists `" & tabla & "_insert_audit` //" & vbCrLf
+                    sql &= " create trigger " & tabla & "_insert_audit after insert on `" & tabla & "`" & vbCrLf
                     sql &= "    for each row" & vbCrLf
                     sql &= "    begin" & vbCrLf
                     sql &= "        insert into au_trans values(null,'" & tabla & "','INSERT',USER(),now());" & vbCrLf
                     For p = 0 To campos.Length - 1
-                        sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "',new." & campos(p).name & ",'');" & vbCrLf
+                        sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "',new.`" & campos(p).name & "`,'');" & vbCrLf
                     Next
                     sql &= " end " & vbCrLf
                     sql &= "//" & vbCrLf
@@ -107,23 +107,23 @@ Public Class Form1
                     sql &= "        insert into au_trans values(null,'" & tabla & "','UPDATE',USER(),now());" & vbCrLf
                     For p = 0 To campos.Length - 1
                         If Not campos(p).key Then
-                            sql &= " if New." & campos(p).name & " <> Old." & campos(p).name & " then" & vbNewLine
-                            sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "',new." & campos(p).name & ",old." & campos(p).name & ");" & vbCrLf
+                            sql &= " if New.`" & campos(p).name & "` <> Old.`" & campos(p).name & "` then" & vbNewLine
+                            sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "',new.`" & campos(p).name & "`,old.`" & campos(p).name & "`);" & vbCrLf
                             sql &= "end if;" & vbNewLine
                         Else
-                            sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "',new." & campos(p).name & ",old." & campos(p).name & ");" & vbCrLf
+                            sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "',new.`" & campos(p).name & "`,old.`" & campos(p).name & "`);" & vbCrLf
                         End If
 
                     Next
                     sql &= " end " & vbCrLf
                     sql &= "//" & vbCrLf
                     sql &= "drop trigger if exists " & tabla & "_delete_audit //" & vbCrLf
-                    sql &= " create trigger " & tabla & "_delete_audit before delete on " & tabla & vbCrLf
+                    sql &= " create trigger " & tabla & "_delete_audit before delete on `" & tabla & "`" & vbCrLf
                     sql &= "    for each row" & vbCrLf
                     sql &= "    begin" & vbCrLf
                     sql &= "        insert into au_trans values(null,'" & tabla & "','DELETE',USER(),now());" & vbCrLf
                     For p = 0 To campos.Length - 1
-                        sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "','',old." & campos(p).name & ");" & vbCrLf
+                        sql &= "        insert into au_dtran values(null,(select max(tra_cont) from au_trans),'" & campos(p).name & "','',old.`" & campos(p).name & "`);" & vbCrLf
                     Next
                     sql &= " end " & vbCrLf
                     sql &= "//" & vbCrLf
